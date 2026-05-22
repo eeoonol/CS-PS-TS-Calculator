@@ -1,594 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Market Surplus & Policy Simulator</title>
-<style>
-  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-  :root {
-    --bg-main: #ffffff;
-    --text: #1d1d1f;
-    --muted: #6e6e73;
-    --accent-main: #0071e3;
-    
-    --cs-color: #0071e3;
-    --ps-color: #34c759;
-    --gov-color: #ff9500;
-    --dwl-color: #ff3b30;
-    --reg-color: #af52de;
-
-    --glass-bg: rgba(245, 247, 250, 0.6);
-    --glass-border: rgba(0, 0, 0, 0.08);
-    --card-glass: rgba(255, 255, 255, 0.8);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background-color: var(--bg-main); color: var(--text);
-    font-family: 'Pretendard', sans-serif; min-height: 100vh;
-    padding: 40px 16px; display: flex; flex-direction: column; align-items: center; gap: 24px;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; text-align: center; color: #111827; }
-  .subtitle { font-size: 0.9rem; color: var(--muted); margin-top: -16px; text-align: center; font-weight: 500; }
-  .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 800px; }
-  
-  .panel-box {
-    background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
-  }
-  .section-title { font-size: 0.85rem; font-weight: 600; color: #3a3a3c; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 16px; }
-
-  .inputs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
-  .math-card {
-    background: var(--card-glass); border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 16px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .math-formula { font-size: 0.95rem; font-weight: 700; color: #111827; text-align: center; padding-bottom: 6px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-  .param-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
-  .param-row input {
-    width: 70px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);
-    font-size: 0.85rem; font-weight: 700; text-align: center; outline: none;
-  }
-  .param-row input:focus { border-color: var(--accent-main); }
-
-  .policy-selector {
-    display: flex; gap: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 14px;
-  }
-  .policy-option {
-    flex: 1; text-align: center; position: relative;
-  }
-  .policy-option input[type="radio"] {
-    position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer;
-  }
-  .policy-label {
-    display: block; padding: 10px; font-size: 0.88rem; font-weight: 600; color: var(--muted); border-radius: 10px; transition: all 0.2s;
-  }
-  .policy-option input[type="radio"]:checked + .policy-label {
-    background: #ffffff; color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-
-  .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
-  .stat-card { background: var(--card-glass); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 18px; padding: 14px; text-align: center; }
-  .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
-  .stat-value { font-size: 1.15rem; font-weight: 700; }
-
-  .slider-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
-  .slider-value { font-size: 1.3rem; color: var(--accent-main); font-weight: 700; }
-  input[type=range] {
-    width: 100%; -webkit-appearance: none; height: 7px; border-radius: 4px; background: rgba(0, 0, 0, 0.06); outline: none; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
-    background: #ffffff; border: 0.5px solid rgba(0, 0, 0, 0.15); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-
-  canvas { width: 100%; display: block; background: #ffffff; border-radius: 16px; }
-
-  .explanation {
-    background: rgba(245, 247, 250, 0.5); border-left: 6px solid var(--accent-main);
-    border-radius: 20px; padding: 20px 24px; font-size: 0.92rem; line-height: 1.7; color: #222224;
-  }
-  .explanation strong { color: var(--accent-main); font-weight: 700; }
-
-  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.75rem; font-weight: 600; color: var(--muted); justify-content: center; margin-top: 16px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-rect { width: 12px; height: 12px; border-radius: 3px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경제학 그래프 분석</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .description-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 0 6px 6px 0;
+        }
+        .description-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Market Surplus & Policy Simulator</h1>
-<p class="subtitle">Analyze market outcomes under taxation, price ceilings, and price floors</p>
-
 <div class="container">
-  
-  <!-- Control Panel -->
-  <div class="panel-box">
-    <div class="section-title">Market Functions & Policy Settings</div>
-    <div class="inputs-grid">
-      <!-- Demand Card -->
-      <div class="math-card">
-        <div class="math-formula" style="color:var(--cs-color)">Demand: P = a - bQ</div>
-        <div class="param-row"><span>Intercept (a)</span><input type="number" id="inputA" value="100" step="5"></div>
-        <div class="param-row"><span>Slope (b)</span><input type="number" id="inputB" value="1.0" step="0.1" min="0.01"></div>
-      </div>
-      <!-- Supply Card -->
-      <div class="math-card">
-        <div class="math-formula" style="color:var(--ps-color)">Supply: P = c + dQ</div>
-        <div class="param-row"><span>Intercept (c)</span><input type="number" id="inputC" value="10" step="5"></div>
-        <div class="param-row"><span>Slope (d)</span><input type="number" id="inputD" value="0.5" step="0.1" min="0.01"></div>
-      </div>
-      <!-- Tax Incidence Card -->
-      <div class="math-card" id="taxIncidenceCard" style="justify-content: center; gap: 6px;">
-        <div class="math-formula" style="color:#5856d6; font-size:0.85rem;">Tax Burden Incidence</div>
-        <div class="param-row" style="font-size:0.78rem;"><span>Consumer Share</span><span id="burdenConsumer" style="color:var(--cs-color); font-weight:700;">-</span></div>
-        <div class="param-row" style="font-size:0.78rem;"><span>Producer Share</span><span id="burdenProducer" style="color:var(--ps-color); font-weight:700;">-</span></div>
-      </div>
-    </div>
-    
-    <!-- Policy Selection -->
-    <div class="policy-selector">
-      <div class="policy-option">
-        <input type="radio" name="policy" id="policyTax" value="tax" checked>
-        <label for="policyTax" class="policy-label">Excise Tax</label>
-      </div>
-      <div class="policy-option">
-        <input type="radio" name="policy" id="policyCeiling" value="ceiling">
-        <label for="policyCeiling" class="policy-label">Price Ceiling</label>
-      </div>
-      <div class="policy-option">
-        <input type="radio" name="policy" id="policyFloor" value="floor">
-        <label for="policyFloor" class="policy-label">Price Floor</label>
-      </div>
+    <!-- 그래프 영역 -->
+    <div class="graph-container">
+        <svg width="450" height="400" viewBox="0 0 450 400" style="background-color: transparent;">
+            <!-- 세로축 (가격 P) -->
+            <line x1="50" y1="50" x2="50" y2="350" stroke="#333" stroke-width="2"/>
+            <text x="30" y="55" font-size="16" font-weight="bold" font-family="sans-serif">P</text>
+            
+            <!-- 가로축 (수량 Q) -->
+            <line x1="50" y1="350" x2="400" y2="350" stroke="#333" stroke-width="2"/>
+            <text x="395" y="375" font-size="16" font-weight="bold" font-family="sans-serif">Q</text>
+            
+            <!-- 공급 곡선 (S) - 작은 알파벳 s 삭제 및 폰트 크기 조정 -->
+            <line x1="80" y1="320" x2="370" y2="70" stroke="#dc3545" stroke-width="3"/>
+            <text x="380" y="75" font-size="18" font-weight="bold" fill="#dc3545" font-family="sans-serif">S</text>
+            
+            <!-- 수요 곡선 (D) - 작은 알파벳 d 삭제 및 폰트 크기 조정 -->
+            <line x1="80" y1="70" x2="370" y2="320" stroke="#28a745" stroke-width="3"/>
+            <text x="380" y="325" font-size="18" font-weight="bold" fill="#28a745" font-family="sans-serif">D</text>
+            
+            <!-- 균형점 점선 및 표시 -->
+            <g dasharray="5,5" stroke="#6c757d" stroke-width="1">
+                <!-- 가격 균형선 -->
+                <line x1="50" y1="195" x2="225" y2="195"/>
+                <!-- 수량 균형선 -->
+                <line x1="225" y1="195" x2="225" y2="350"/>
+            </g>
+            
+            <!-- 균형 가격 및 수량 레이블 -->
+            <text x="25" y="200" font-size="15" font-family="sans-serif">P*</text>
+            <text x="218" y="370" font-size="15" font-family="sans-serif">Q*</text>
+            
+            <!-- 균형점 교점 교차 마크 -->
+            <circle cx="225" cy="195" r="5" fill="#333"/>
+            <text x="235" y="190" font-size="15" font-weight="bold" font-family="sans-serif">E</text>
+        </svg>
     </div>
 
-    <!-- Dynamic Slider Element -->
-    <div class="slider-label">
-      <span id="sliderTitle">Per-unit Excise Tax (T)</span>
-      <span class="slider-value" id="sliderDisplay">T = 0.0</span>
+    <!-- 설명란 영역 (** 삭제 완료) -->
+    <div class="description-section">
+        <div class="description-title">시장 균형 분석 설명</div>
+        <p>
+            위 그래프는 완전경쟁시장에서의 수요와 공급의 상호작용을 나타냅니다. 
+            수요 곡선(D)은 가격이 하락할수록 수요량이 증가하는 우하향 형태를 보이며, 
+            공급 곡선(S)은 가격이 상승할수록 공급량이 증가하는 우상향 형태를 가집니다.
+        </p>
+        <p>
+            두 곡선이 교차하는 지점 E는 시장 균형(Equilibrium)을 의미하며, 
+            이때의 가격 P*는 균형 가격, 수량 Q*는 균형 거래량이 됩니다. 
+            시장에 외부 충격이 없는 한 가격과 수량은 이 균형 상태를 유지하려는 경향을 보입니다.
+        </p>
     </div>
-    <input type="range" id="policySlider" min="0" max="40" value="15" step="0.5">
-  </div>
-
-  <!-- Dashboard -->
-  <div class="panel-box">
-    <div class="section-title">Welfare Indicators</div>
-    <div class="dashboard">
-      <div class="stat-card" style="border-top: 4px solid var(--cs-color)">
-        <div class="stat-label">Consumer Surplus (CS)</div>
-        <div class="stat-value" id="valCS" style="color:var(--cs-color)">0</div>
-      </div>
-      <div class="stat-card" style="border-top: 4px solid var(--ps-color)">
-        <div class="stat-label">Producer Surplus (PS)</div>
-        <div class="stat-value" id="valPS" style="color:var(--ps-color)">0</div>
-      </div>
-      <div class="stat-card" style="border-top: 4px solid var(--gov-color)">
-        <div class="stat-label" id="labelGR">Government Revenue</div>
-        <div class="stat-value" id="valGR" style="color:var(--gov-color)">0</div>
-      </div>
-      <div class="stat-card" style="border-top: 4px solid var(--dwl-color)">
-        <div class="stat-label">Deadweight Loss (DWL)</div>
-        <div class="stat-value" id="valDWL" style="color:var(--dwl-color)">0</div>
-      </div>
-      <div class="stat-card" style="border-top: 4px solid #8e8e93">
-        <div class="stat-label">Total Welfare (TW)</div>
-        <div class="stat-value" id="valTS">0</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Canvas Geometric Plot -->
-  <div class="panel-box">
-    <div class="section-title">Geometric Visualization</div>
-    <canvas id="surplusCanvas" height="360"></canvas>
-    
-    <div class="legend">
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(0, 113, 227, 0.15)"></div><span>Consumer Surplus (CS)</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(52, 199, 89, 0.15)"></div><span>Producer Surplus (PS)</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 149, 0, 0.15)"></div><span id="legendGR">Gov. Revenue</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 59, 48, 0.2)"></div><span>Deadweight Loss (DWL)</span></div>
-    </div>
-  </div>
-
-  <!-- Dynamic Analytical Briefing -->
-  <div class="explanation" id="explanation"></div>
 </div>
 
-<script>
-const canvas = document.getElementById('surplusCanvas');
-const ctx = canvas.getContext('2d');
-
-let W = canvas.width;
-let H = canvas.height;
-const pad = {l:65, r:35, t:25, b:45};
-
-let maxQ = 100;
-let maxP = 120;
-let currentPolicy = 'tax';
-
-function toCanvas(p, q) {
-  const x = pad.l + (q / maxQ) * (W - pad.l - pad.r);
-  const y = pad.t + (1 - p / maxP) * (H - pad.t - pad.b);
-  return {x, y};
-}
-
-function handlePolicyChange() {
-  currentPolicy = document.querySelector('input[name="policy"]:checked').value;
-  const slider = document.getElementById('policySlider');
-  
-  const a = Math.abs(parseFloat(document.getElementById('inputA').value)) || 0;
-  const c = Math.abs(parseFloat(document.getElementById('inputC').value)) || 0;
-  const b = Math.abs(parseFloat(document.getElementById('inputB').value)) || 1;
-  const d = Math.abs(parseFloat(document.getElementById('inputD').value)) || 1;
-  const P0 = a - b * ((a - c) / (b + d));
-
-  const incidenceCard = document.getElementById('taxIncidenceCard');
-  const labelGR = document.getElementById('labelGR');
-  const legendGR = document.getElementById('legendGR');
-
-  if (currentPolicy === 'tax') {
-    sliderTitle.textContent = 'Per-unit Excise Tax (T)';
-    slider.min = "0";
-    slider.max = (a - c).toFixed(1);
-    slider.step = "0.5";
-    incidenceCard.style.visibility = 'visible';
-    labelGR.textContent = 'Government Revenue';
-    legendGR.textContent = 'Gov. Revenue';
-  } else if (currentPolicy === 'ceiling') {
-    sliderTitle.textContent = 'Price Ceiling Level (Pc)';
-    slider.min = c.toFixed(1);
-    slider.max = a.toFixed(1);
-    slider.step = "0.5";
-    if(slider.value > P0 || slider.value == 15) slider.value = Math.max(c, P0 - 15).toFixed(1); 
-    incidenceCard.style.visibility = 'hidden';
-    labelGR.textContent = 'Lost/Unallocated';
-    legendGR.textContent = 'Lost/Unallocated';
-  } else if (currentPolicy === 'floor') {
-    sliderTitle.textContent = 'Price Floor Level (Pf)';
-    slider.min = c.toFixed(1);
-    slider.max = a.toFixed(1);
-    slider.step = "0.5";
-    if(slider.value < P0 || slider.value == 15) slider.value = Math.min(a, P0 + 15).toFixed(1);
-    incidenceCard.style.visibility = 'hidden';
-    labelGR.textContent = 'Lost/Unallocated';
-    legendGR.textContent = 'Lost/Unallocated';
-  }
-  calculateAndDraw();
-}
-
-function calculateAndDraw() {
-  const a = Math.abs(parseFloat(document.getElementById('inputA').value)) || 0;
-  const b = Math.abs(parseFloat(document.getElementById('inputB').value)) || 1;
-  const c = Math.abs(parseFloat(document.getElementById('inputC').value)) || 0;
-  const d = Math.abs(parseFloat(document.getElementById('inputD').value)) || 1;
-  const sliderVal = parseFloat(document.getElementById('policySlider').value) || 0;
-
-  let Q0 = (a - c) / (b + d);
-  if (Q0 < 0) Q0 = 0;
-  const P0 = a - b * Q0;
-
-  let Qt = Q0; 
-  let Pd = P0, Ps = P0;
-  let tax = 0;
-  let preg = 0; 
-  let isBinding = false; 
-
-  let CS = 0, PS = 0, GR = 0, DWL = 0;
-
-  if (currentPolicy === 'tax') {
-    tax = sliderVal;
-    document.getElementById('sliderDisplay').textContent = 'T = ' + tax.toFixed(1);
-    document.getElementById('sliderDisplay').style.color = 'var(--dwl-color)';
-
-    Qt = (a - c - tax) / (b + d);
-    if (Qt < 0) Qt = 0;
-    Pd = a - b * Qt;
-    Ps = Pd - tax;
-
-    if (Qt > 0) {
-      CS = 0.5 * (a - Pd) * Qt;
-      PS = 0.5 * (Ps - c) * Qt;
-      GR = tax * Qt;
-      DWL = 0.5 * tax * (Q0 - Qt);
-    } else {
-      DWL = 0.5 * (a - c) * Q0;
-    }
-  } 
-  else if (currentPolicy === 'ceiling') {
-    preg = sliderVal;
-    document.getElementById('sliderDisplay').textContent = 'Pc = ' + preg.toFixed(1);
-    document.getElementById('sliderDisplay').style.color = 'var(--reg-color)';
-
-    if (preg < P0) { 
-      isBinding = true;
-      Qt = (preg - c) / d;
-      if (Qt < 0) Qt = 0;
-      Pd = a - b * Qt; 
-      Ps = preg;      
-      CS = 0.5 * (a - Pd) * Qt + (Pd - preg) * Qt; 
-      PS = 0.5 * (preg - c) * Qt;
-      GR = 0; 
-      DWL = 0.5 * (Pd - preg) * (Q0 - Qt);
-    } else { 
-      CS = 0.5 * (a - P0) * Q0;
-      PS = 0.5 * (P0 - c) * Q0;
-    }
-  } 
-  else if (currentPolicy === 'floor') {
-    preg = sliderVal;
-    document.getElementById('sliderDisplay').textContent = 'Pf = ' + preg.toFixed(1);
-    document.getElementById('sliderDisplay').style.color = 'var(--reg-color)';
-
-    if (preg > P0) { 
-      isBinding = true;
-      Qt = (a - preg) / b;
-      if (Qt < 0) Qt = 0;
-      Pd = preg;      
-      Ps = c + d * Qt; 
-      CS = 0.5 * (a - preg) * Qt;
-      PS = 0.5 * (Ps - c) * Qt + (preg - Ps) * Qt;
-      GR = 0;
-      DWL = 0.5 * (preg - Ps) * (Q0 - Qt);
-    } else { 
-      CS = 0.5 * (a - P0) * Q0;
-      PS = 0.5 * (P0 - c) * Q0;
-    }
-  }
-
-  const TS = CS + PS + GR;
-
-  document.getElementById('valCS').textContent = CS.toFixed(1);
-  document.getElementById('valPS').textContent = PS.toFixed(1);
-  document.getElementById('valGR').textContent = GR.toFixed(1);
-  document.getElementById('valDWL').textContent = DWL.toFixed(1);
-  document.getElementById('valTS').textContent = TS.toFixed(1);
-
-  if (currentPolicy === 'tax' && tax > 0 && Qt > 0) {
-    const consumerShare = ((Pd - P0) / tax) * 100;
-    const producerShare = ((P0 - Ps) / tax) * 100;
-    document.getElementById('burdenConsumer').textContent = consumerShare.toFixed(0) + '%';
-    document.getElementById('burdenProducer').textContent = producerShare.toFixed(0) + '%';
-  } else {
-    document.getElementById('burdenConsumer').textContent = '-';
-    document.getElementById('burdenProducer').textContent = '-';
-  }
-
-  maxQ = Math.max(Q0 * 1.4, 40);
-  maxP = Math.max(a * 1.15, 50);
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (Qt > 0) {
-    // CS
-    ctx.fillStyle = 'rgba(0, 113, 227, 0.12)';
-    ctx.beginPath();
-    if (currentPolicy === 'ceiling' && isBinding) {
-      ctx.moveTo(toCanvas(a, 0).x, toCanvas(a, 0).y);
-      ctx.lineTo(toCanvas(Pd, 0).x, toCanvas(Pd, 0).y);
-      ctx.lineTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y);
-      ctx.lineTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y);
-      ctx.lineTo(toCanvas(preg, 0).x, toCanvas(preg, 0).y);
-    } else {
-      ctx.moveTo(toCanvas(Pd, 0).x, toCanvas(Pd, 0).y);
-      ctx.lineTo(toCanvas(a, 0).x, toCanvas(a, 0).y);
-      ctx.lineTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y);
-    }
-    ctx.closePath(); ctx.fill();
-
-    // PS
-    ctx.fillStyle = 'rgba(52, 199, 89, 0.12)';
-    ctx.beginPath();
-    if (currentPolicy === 'floor' && isBinding) {
-      ctx.moveTo(toCanvas(c, 0).x, toCanvas(c, 0).y);
-      ctx.lineTo(toCanvas(preg, 0).x, toCanvas(preg, 0).y);
-      ctx.lineTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y);
-      ctx.lineTo(toCanvas(Ps, Qt).x, toCanvas(Ps, Qt).y);
-      ctx.lineTo(toCanvas(Ps, 0).x, toCanvas(Ps, 0).y);
-    } else {
-      ctx.moveTo(toCanvas(c, 0).x, toCanvas(c, 0).y);
-      ctx.lineTo(toCanvas(Ps, 0).x, toCanvas(Ps, 0).y);
-      ctx.lineTo(toCanvas(Ps, Qt).x, toCanvas(Ps, Qt).y);
-    }
-    ctx.closePath(); ctx.fill();
-
-    // GR Box
-    if (currentPolicy === 'tax' && tax > 0) {
-      ctx.fillStyle = 'rgba(255, 149, 0, 0.12)';
-      const xLeft = toCanvas(Pd, 0).x;
-      const yTop = toCanvas(Pd, Qt).y;
-      const xRight = toCanvas(Pd, Qt).x;
-      const yBottom = toCanvas(Ps, Qt).y;
-      ctx.fillRect(xLeft, yTop, xRight - xLeft, yBottom - yTop);
-    }
-
-    // DWL
-    if ((currentPolicy === 'tax' && tax > 0) || isBinding) {
-      ctx.fillStyle = 'rgba(255, 59, 48, 0.18)';
-      ctx.beginPath();
-      if (currentPolicy === 'tax') {
-        ctx.moveTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y);
-        ctx.lineTo(toCanvas(P0, Q0).x, toCanvas(P0, Q0).y);
-        ctx.lineTo(toCanvas(Ps, Qt).x, toCanvas(Ps, Qt).y);
-      } else if (currentPolicy === 'ceiling') {
-        ctx.moveTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y);
-        ctx.lineTo(toCanvas(P0, Q0).x, toCanvas(P0, Q0).y);
-        ctx.lineTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y);
-      } else if (currentPolicy === 'floor') {
-        ctx.moveTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y);
-        ctx.lineTo(toCanvas(P0, Q0).x, toCanvas(P0, Q0).y);
-        ctx.lineTo(toCanvas(Ps, Qt).x, toCanvas(Ps, Qt).y);
-      }
-      ctx.closePath(); ctx.fill();
-    }
-  }
-
-  // Grid
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
-  ctx.lineWidth = 1;
-  for(let p=20; p<maxP; p+=20) {
-    ctx.beginPath(); ctx.moveTo(pad.l, toCanvas(p, 0).y); ctx.lineTo(W-pad.r, toCanvas(p, 0).y); ctx.stroke();
-  }
-  for(let q=20; q<maxQ; q+=20) {
-    ctx.beginPath(); ctx.moveTo(toCanvas(0, q).x, pad.t); ctx.lineTo(toCanvas(0, q).x, H-pad.b); ctx.stroke();
-  }
-
-  // Axes
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(pad.l, H-pad.b); ctx.lineTo(W-pad.r, H-pad.b); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H-pad.b); ctx.stroke();
-
-  // Demand (D)
-  ctx.lineWidth = 3.5; ctx.strokeStyle = '#0071e3';
-  ctx.beginPath();
-  ctx.moveTo(toCanvas(a, 0).x, toCanvas(a, 0).y);
-  ctx.lineTo(toCanvas(Math.max(0, a - b * maxQ), maxQ).x, toCanvas(Math.max(0, a - b * maxQ), maxQ).y);
-  ctx.stroke();
-
-  // Supply (S)
-  ctx.strokeStyle = '#34c759';
-  ctx.beginPath();
-  ctx.moveTo(toCanvas(c, 0).x, toCanvas(c, 0).y);
-  ctx.lineTo(toCanvas(c + d * maxQ, maxQ).x, toCanvas(c + d * maxQ, maxQ).y);
-  ctx.stroke();
-
-  // S + Tax
-  if(currentPolicy === 'tax' && tax > 0) {
-    ctx.strokeStyle = '#5856d6';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    ctx.moveTo(toCanvas(c + tax, 0).x, toCanvas(c + tax, 0).y);
-    ctx.lineTo(toCanvas(c + tax + d * maxQ, maxQ).x, toCanvas(c + tax + d * maxQ, maxQ).y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // Price Regulation Line
-  if((currentPolicy === 'ceiling' || currentPolicy === 'floor')) {
-    ctx.strokeStyle = 'var(--reg-color)';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([6, 3]);
-    ctx.beginPath();
-    ctx.moveTo(pad.l, toCanvas(preg, 0).y);
-    ctx.lineTo(W-pad.r, toCanvas(preg, 0).y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // Guideline Dashes
-  if (Qt > 0) {
-    ctx.strokeStyle = '#ff3b30';
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([4, 4]);
-
-    if (currentPolicy === 'tax') {
-      ctx.beginPath(); ctx.moveTo(pad.l, toCanvas(Pd, Qt).y); ctx.lineTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(pad.l, toCanvas(Ps, Qt).y); ctx.lineTo(toCanvas(Ps, Qt).x, toCanvas(Ps, Qt).y); ctx.stroke();
-    } else {
-      ctx.beginPath(); ctx.moveTo(pad.l, toCanvas(preg, Qt).y); ctx.lineTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y); ctx.stroke();
-    }
-    ctx.beginPath(); ctx.moveTo(toCanvas(Qt, Qt).x, toCanvas(Math.max(Pd, preg), Qt).y); ctx.lineTo(toCanvas(Qt, Qt).x, H-pad.b); ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = '#ff3b30';
-    ctx.font = '700 11px Pretendard, sans-serif';
-    ctx.textAlign = 'right';
-    
-    if (currentPolicy === 'tax' && tax > 0) {
-      let offsetD = 4, offsetS = 4;
-      if (Math.abs(toCanvas(Pd, Qt).y - toCanvas(Ps, Qt).y) < 14) { offsetD = -3; offsetS = 10; }
-      ctx.fillText('Pd=' + Pd.toFixed(1), pad.l - 6, toCanvas(Pd, Qt).y + offsetD);
-      ctx.fillText('Ps=' + Ps.toFixed(1), pad.l - 6, toCanvas(Ps, Qt).y + offsetS);
-    } else if (isBinding) {
-      ctx.fillText('Preg=' + preg.toFixed(1), pad.l - 6, toCanvas(preg, Qt).y + 4);
-    } else {
-      ctx.fillText('P0=' + P0.toFixed(1), pad.l - 6, toCanvas(P0, Q0).y + 4);
-    }
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText('Qr=' + Qt.toFixed(1), toCanvas(0, Qt).x, H-pad.b + 6);
-    ctx.textBaseline = 'alphabetic';
-  }
-
-  // Axis Labels
-  ctx.fillStyle = 'var(--muted)';
-  ctx.font = '600 11px Pretendard';
-  ctx.textAlign = 'center';
-  ctx.fillText('Q (Quantity)', W/2, H - 10);
-  
-  ctx.save();
-  ctx.translate(16, H/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText('P (Price)', 0, 0);
-  ctx.restore();
-
-  // Curve Labels
-  ctx.font = '700 11px Pretendard';
-  ctx.fillStyle = '#0071e3'; ctx.fillText('D', toCanvas(a, 0).x + 12, toCanvas(a, 0).y + 12);
-  ctx.fillStyle = '#34c759'; ctx.fillText('S', toCanvas(c + d*maxQ, maxQ).x - 12, toCanvas(c + d*maxQ, maxQ).y - 6);
-  if(currentPolicy === 'tax' && tax > 0) {
-    ctx.fillStyle = '#5856d6'; ctx.fillText('S+Tax', toCanvas(c + tax + d*maxQ, maxQ).x - 14, toCanvas(c + tax + d*maxQ, maxQ).y - 18);
-  }
-  if((currentPolicy === 'ceiling' || currentPolicy === 'floor')) {
-    ctx.fillStyle = 'var(--reg-color)'; ctx.fillText(currentPolicy === 'ceiling' ? 'Ceiling' : 'Floor', W - pad.r - 35, toCanvas(preg, 0).y - 6);
-  }
-
-  // Brief Reports
-  const expEl = document.getElementById('explanation');
-  if (currentPolicy === 'tax') {
-    if (tax === 0) {
-      expEl.innerHTML = `**Free Market Equilibrium**: Market clears at P = <strong>${P0.toFixed(1)}</strong> and Q = <strong>${Q0.toFixed(1)}</strong>. Total welfare is maximized with zero deadweight loss.`;
-    } else if (Qt === 0) {
-      expEl.innerHTML = `**Market Shutdown**: The tax barrier (T = ${tax.toFixed(1)}) exceeds maximum consumer willingness to pay, suppressing all market transactions.`;
-    } else {
-      const incidenceDesc = Math.abs(b - d) < 0.01 ? 'equally shared' : (b > d ? 'borne more by consumers (inelastic demand)' : 'borne more by producers (inelastic supply)');
-      expEl.innerHTML = `**Tax Imposed**: Per-unit tax of <strong>${tax.toFixed(1)}</strong> creates a wedge between consumer price (Pd = <strong>${Pd.toFixed(1)}</strong>) and producer price (Ps = <strong>${Ps.toFixed(1)}</strong>). The economic incidence is <strong>${incidenceDesc}</strong>, generating a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
-    }
-  } 
-  else if (currentPolicy === 'ceiling') {
-    if (!isBinding) {
-      expEl.innerHTML = `**Non-Binding Price Ceiling**: Since Pc (${preg.toFixed(1)}) sits above the equilibrium price (${P0.toFixed(1)}), it has no economic impact. The market clears normally.`;
-    } else {
-      expEl.innerHTML = `**Binding Price Ceiling**: Pc (<strong>${preg.toFixed(1)}</strong>) restricts the market price. Following the **Short-side Rule**, producers reduce output, shrinking market volume to Qr = <strong>${Qt.toFixed(1)}</strong>. This distortion creates a shortage and triggers a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
-    }
-  } 
-  else if (currentPolicy === 'floor') {
-    if (!isBinding) {
-      expEl.innerHTML = `**Non-Binding Price Floor**: Since Pf (${preg.toFixed(1)}) sits below the equilibrium price (${P0.toFixed(1)}), it has no economic impact. The market clears normally.`;
-    } else {
-      expEl.innerHTML = `**Binding Price Floor**: Pf (<strong>${preg.toFixed(1)}</strong>) forces price above equilibrium. Following the **Short-side Rule**, consumer demand contracts, cutting transactions to Qr = <strong>${Qt.toFixed(1)}</strong>. This policy induces a market surplus (excess supply) and a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
-    }
-  }
-}
-
-function resize() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  W = rect.width - 48;
-  H = 360;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  ctx.resetTransform(); ctx.scale(dpr, dpr);
-  calculateAndDraw();
-}
-
-['inputA', 'inputB', 'inputC', 'inputD'].forEach(id => {
-  document.getElementById(id).addEventListener('input', calculateAndDraw);
-});
-document.getElementById('policySlider').addEventListener('input', calculateAndDraw);
-document.querySelectorAll('input[name="policy"]').forEach(radio => {
-  radio.addEventListener('change', handlePolicyChange);
-});
-window.addEventListener('resize', resize);
-
-handlePolicyChange();
-resize();
-</script>
 </body>
 </html>
