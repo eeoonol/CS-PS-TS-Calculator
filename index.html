@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>경제학 시장 잉여 & 정책 시뮬레이터</title>
+<title>Market Surplus & Policy Simulator</title>
 <style>
   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -17,7 +17,7 @@
     --ps-color: #34c759;
     --gov-color: #ff9500;
     --dwl-color: #ff3b30;
-    --reg-color: #af52de; /* 규제 가격선 색상 (보라색) */
+    --reg-color: #af52de;
 
     --glass-bg: rgba(245, 247, 250, 0.6);
     --glass-border: rgba(0, 0, 0, 0.08);
@@ -43,7 +43,6 @@
   }
   .section-title { font-size: 0.85rem; font-weight: 600; color: #3a3a3c; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 16px; }
 
-  /* 수식 및 세금 입력 레이아웃 */
   .inputs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
   .math-card {
     background: var(--card-glass); border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 16px;
@@ -57,7 +56,6 @@
   }
   .param-row input:focus { border-color: var(--accent-main); }
 
-  /* 정책 선택 라디오 그룹 */
   .policy-selector {
     display: flex; gap: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 14px;
   }
@@ -74,13 +72,11 @@
     background: #ffffff; color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
 
-  /* 대시보드 스코어판 */
   .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
   .stat-card { background: var(--card-glass); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 18px; padding: 14px; text-align: center; }
   .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
   .stat-value { font-size: 1.15rem; font-weight: 700; }
 
-  /* 슬라이더 영역 */
   .slider-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
   .slider-value { font-size: 1.3rem; color: var(--accent-main); font-weight: 700; }
   input[type=range] {
@@ -107,99 +103,99 @@
 <body>
 
 <h1>Market Surplus & Policy Simulator</h1>
-<p class="subtitle">수요·공급 수식과 정부 정책(조세/가격규제)을 조합하여 시장 왜곡과 후생 변화를 분석합니다</p>
+<p class="subtitle">Analyze market outcomes under taxation, price ceilings, and price floors</p>
 
 <div class="container">
   
-  <!-- 수식 및 정책 제어 패널 -->
+  <!-- Control Panel -->
   <div class="panel-box">
-    <div class="section-title">시장 함수 및 경제 정책 변수 제어</div>
+    <div class="section-title">Market Functions & Policy Settings</div>
     <div class="inputs-grid">
-      <!-- 역수요 곡선 카드 -->
+      <!-- Demand Card -->
       <div class="math-card">
         <div class="math-formula" style="color:var(--cs-color)">Demand: P = a - bQ</div>
-        <div class="param-row"><span>절편 (a)</span><input type="number" id="inputA" value="100" step="5"></div>
-        <div class="param-row"><span>기울기 (b)</span><input type="number" id="inputB" value="1.0" step="0.1" min="0.01"></div>
+        <div class="param-row"><span>Intercept (a)</span><input type="number" id="inputA" value="100" step="5"></div>
+        <div class="param-row"><span>Slope (b)</span><input type="number" id="inputB" value="1.0" step="0.1" min="0.01"></div>
       </div>
-      <!-- 역공급 곡선 카드 -->
+      <!-- Supply Card -->
       <div class="math-card">
         <div class="math-formula" style="color:var(--ps-color)">Supply: P = c + dQ</div>
-        <div class="param-row"><span>절편 (c)</span><input type="number" id="inputC" value="10" step="5"></div>
-        <div class="param-row"><span>기울기 (d)</span><input type="number" id="inputD" value="0.5" step="0.1" min="0.01"></div>
+        <div class="param-row"><span>Intercept (c)</span><input type="number" id="inputC" value="10" step="5"></div>
+        <div class="param-row"><span>Slope (d)</span><input type="number" id="inputD" value="0.5" step="0.1" min="0.01"></div>
       </div>
-      <!-- 조세 부담률 귀착 분석 요약 카드 -->
+      <!-- Tax Incidence Card -->
       <div class="math-card" id="taxIncidenceCard" style="justify-content: center; gap: 6px;">
         <div class="math-formula" style="color:#5856d6; font-size:0.85rem;">Tax Burden Incidence</div>
-        <div class="param-row" style="font-size:0.78rem;"><span>소비자 부담</span><span id="burdenConsumer" style="color:var(--cs-color); font-weight:700;">-</span></div>
-        <div class="param-row" style="font-size:0.78rem;"><span>생산자 부담</span><span id="burdenProducer" style="color:var(--ps-color); font-weight:700;">-</span></div>
+        <div class="param-row" style="font-size:0.78rem;"><span>Consumer Share</span><span id="burdenConsumer" style="color:var(--cs-color); font-weight:700;">-</span></div>
+        <div class="param-row" style="font-size:0.78rem;"><span>Producer Share</span><span id="burdenProducer" style="color:var(--ps-color); font-weight:700;">-</span></div>
       </div>
     </div>
     
-    <!-- 경제 정책 선택 (조세 / 가격상한 / 가격하한) -->
+    <!-- Policy Selection -->
     <div class="policy-selector">
       <div class="policy-option">
         <input type="radio" name="policy" id="policyTax" value="tax" checked>
-        <label for="policyTax" class="policy-label">물품세(종량세) 부과</label>
+        <label for="policyTax" class="policy-label">Excise Tax</label>
       </div>
       <div class="policy-option">
         <input type="radio" name="policy" id="policyCeiling" value="ceiling">
-        <label for="policyCeiling" class="policy-label">가격상한제 (Price Ceiling)</label>
+        <label for="policyCeiling" class="policy-label">Price Ceiling</label>
       </div>
       <div class="policy-option">
         <input type="radio" name="policy" id="policyFloor" value="floor">
-        <label for="policyFloor" class="policy-label">가격하한제 (Price Floor)</label>
+        <label for="policyFloor" class="policy-label">Price Floor</label>
       </div>
     </div>
 
-    <!-- 동적 제어 슬라이더 영역 -->
+    <!-- Dynamic Slider Element -->
     <div class="slider-label">
-      <span id="sliderTitle">정부 부과 단위당 종량세 (Tax)</span>
+      <span id="sliderTitle">Per-unit Excise Tax (T)</span>
       <span class="slider-value" id="sliderDisplay">T = 0.0</span>
     </div>
     <input type="range" id="policySlider" min="0" max="40" value="15" step="0.5">
   </div>
 
-  <!-- 경제 지표 분석 결과 대시보드 -->
+  <!-- Dashboard -->
   <div class="panel-box">
-    <div class="section-title">시장 균형 및 후생 지표 연산 데이터</div>
+    <div class="section-title">Welfare Indicators</div>
     <div class="dashboard">
       <div class="stat-card" style="border-top: 4px solid var(--cs-color)">
-        <div class="stat-label">소비자 잉여 (CS)</div>
+        <div class="stat-label">Consumer Surplus (CS)</div>
         <div class="stat-value" id="valCS" style="color:var(--cs-color)">0</div>
       </div>
       <div class="stat-card" style="border-top: 4px solid var(--ps-color)">
-        <div class="stat-label">생산자 잉여 (PS)</div>
+        <div class="stat-label">Producer Surplus (PS)</div>
         <div class="stat-value" id="valPS" style="color:var(--ps-color)">0</div>
       </div>
       <div class="stat-card" style="border-top: 4px solid var(--gov-color)">
-        <div class="stat-label" id="labelGR">정부 조세 수입 (GR)</div>
+        <div class="stat-label" id="labelGR">Government Revenue</div>
         <div class="stat-value" id="valGR" style="color:var(--gov-color)">0</div>
       </div>
       <div class="stat-card" style="border-top: 4px solid var(--dwl-color)">
-        <div class="stat-label">자중 손실 (DWL)</div>
+        <div class="stat-label">Deadweight Loss (DWL)</div>
         <div class="stat-value" id="valDWL" style="color:var(--dwl-color)">0</div>
       </div>
       <div class="stat-card" style="border-top: 4px solid #8e8e93">
-        <div class="stat-label">사회적 총후생 (TS)</div>
+        <div class="stat-label">Total Welfare (TW)</div>
         <div class="stat-value" id="valTS">0</div>
       </div>
     </div>
   </div>
 
-  <!-- 기하학적 그래프 시각화 스페이스 -->
+  <!-- Canvas Geometric Plot -->
   <div class="panel-box">
-    <div class="section-title">수요·공급 균형 및 경제적 잉여 영역 기하 시각화</div>
+    <div class="section-title">Geometric Visualization</div>
     <canvas id="surplusCanvas" height="360"></canvas>
     
     <div class="legend">
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(0, 113, 227, 0.15)"></div><span>소비자잉여 (CS)</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(52, 199, 89, 0.15)"></div><span>생산자잉여 (PS)</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 149, 0, 0.15)"></div><span id="legendGR">정부 세수 (GR)</span></div>
-      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 59, 48, 0.2)"></div><span>자중손실 (DWL)</span></div>
+      <div class="legend-item"><div class="legend-rect" style="background:rgba(0, 113, 227, 0.15)"></div><span>Consumer Surplus (CS)</span></div>
+      <div class="legend-item"><div class="legend-rect" style="background:rgba(52, 199, 89, 0.15)"></div><span>Producer Surplus (PS)</span></div>
+      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 149, 0, 0.15)"></div><span id="legendGR">Gov. Revenue</span></div>
+      <div class="legend-item"><div class="legend-rect" style="background:rgba(255, 59, 48, 0.2)"></div><span>Deadweight Loss (DWL)</span></div>
     </div>
   </div>
 
-  <!-- 동적 요약 브리핑 문구 -->
+  <!-- Dynamic Analytical Briefing -->
   <div class="explanation" id="explanation"></div>
 </div>
 
@@ -213,8 +209,6 @@ const pad = {l:65, r:35, t:25, b:45};
 
 let maxQ = 100;
 let maxP = 120;
-
-// 선택된 정책 상태 ('tax', 'ceiling', 'floor')
 let currentPolicy = 'tax';
 
 function toCanvas(p, q) {
@@ -223,7 +217,6 @@ function toCanvas(p, q) {
   return {x, y};
 }
 
-// 정책 변경 시 슬라이더 최댓값 및 상태 조정 리스너
 function handlePolicyChange() {
   currentPolicy = document.querySelector('input[name="policy"]:checked').value;
   const slider = document.getElementById('policySlider');
@@ -239,32 +232,31 @@ function handlePolicyChange() {
   const legendGR = document.getElementById('legendGR');
 
   if (currentPolicy === 'tax') {
-    sliderTitle.textContent = '정부 부과 단위당 종량세 (Tax)';
+    sliderTitle.textContent = 'Per-unit Excise Tax (T)';
     slider.min = "0";
     slider.max = (a - c).toFixed(1);
     slider.step = "0.5";
     incidenceCard.style.visibility = 'visible';
-    labelGR.textContent = '정부 조세 수입 (GR)';
-    legendGR.textContent = '정부 세수 (GR)';
+    labelGR.textContent = 'Government Revenue';
+    legendGR.textContent = 'Gov. Revenue';
   } else if (currentPolicy === 'ceiling') {
-    sliderTitle.textContent = '최고가격 규제 설정선 (Price Ceiling)';
+    sliderTitle.textContent = 'Price Ceiling Level (Pc)';
     slider.min = c.toFixed(1);
     slider.max = a.toFixed(1);
     slider.step = "0.5";
-    // 상한제 기본값은 균형가격보다 조금 낮게 세팅해 유연한 UI 제공
     if(slider.value > P0 || slider.value == 15) slider.value = Math.max(c, P0 - 15).toFixed(1); 
     incidenceCard.style.visibility = 'hidden';
-    labelGR.textContent = '유실/기타 잉여';
-    legendGR.textContent = '유실/기타 잉여';
+    labelGR.textContent = 'Lost/Unallocated';
+    legendGR.textContent = 'Lost/Unallocated';
   } else if (currentPolicy === 'floor') {
-    sliderTitle.textContent = '최저가격 규제 설정선 (Price Floor)';
+    sliderTitle.textContent = 'Price Floor Level (Pf)';
     slider.min = c.toFixed(1);
     slider.max = a.toFixed(1);
     slider.step = "0.5";
     if(slider.value < P0 || slider.value == 15) slider.value = Math.min(a, P0 + 15).toFixed(1);
     incidenceCard.style.visibility = 'hidden';
-    labelGR.textContent = '유실/기타 잉여';
-    legendGR.textContent = '유실/기타 잉여';
+    labelGR.textContent = 'Lost/Unallocated';
+    legendGR.textContent = 'Lost/Unallocated';
   }
   calculateAndDraw();
 }
@@ -276,21 +268,18 @@ function calculateAndDraw() {
   const d = Math.abs(parseFloat(document.getElementById('inputD').value)) || 1;
   const sliderVal = parseFloat(document.getElementById('policySlider').value) || 0;
 
-  // 1. 초기 자유시장 균형 연산
   let Q0 = (a - c) / (b + d);
   if (Q0 < 0) Q0 = 0;
   const P0 = a - b * Q0;
 
-  // 변수 초기화
   let Qt = Q0; 
   let Pd = P0, Ps = P0;
   let tax = 0;
-  let preg = 0; // 규제 가격
-  let isBinding = false; // 정책 실효성 여부
+  let preg = 0; 
+  let isBinding = false; 
 
   let CS = 0, PS = 0, GR = 0, DWL = 0;
 
-  // 2. 정책 유형별 균형 분기 연산
   if (currentPolicy === 'tax') {
     tax = sliderVal;
     document.getElementById('sliderDisplay').textContent = 'T = ' + tax.toFixed(1);
@@ -315,20 +304,17 @@ function calculateAndDraw() {
     document.getElementById('sliderDisplay').textContent = 'Pc = ' + preg.toFixed(1);
     document.getElementById('sliderDisplay').style.color = 'var(--reg-color)';
 
-    if (preg < P0) { // 실효성 있는 가격상한제
+    if (preg < P0) { 
       isBinding = true;
-      // Short-side Rule: 공급량이 거래량을 제한함 P = c + dQ => Q = (P-c)/d
       Qt = (preg - c) / d;
       if (Qt < 0) Qt = 0;
-      
-      Pd = a - b * Qt; // 이 거래량에서 소비자의 최대 지불용의 가격
-      Ps = preg;      // 생산자가 실제 받는 가격
-      
-      CS = 0.5 * (a - Pd) * Qt + (Pd - preg) * Qt; // 사각형(Pd-Preg)*Qt 부분이 암시장 가격 형성 시 변동 가능하나 표준적 계산 적용
+      Pd = a - b * Qt; 
+      Ps = preg;      
+      CS = 0.5 * (a - Pd) * Qt + (Pd - preg) * Qt; 
       PS = 0.5 * (preg - c) * Qt;
-      GR = 0; // 상한제에서는 정부 수입 없음
+      GR = 0; 
       DWL = 0.5 * (Pd - preg) * (Q0 - Qt);
-    } else { // 실효성 없는 상한제
+    } else { 
       CS = 0.5 * (a - P0) * Q0;
       PS = 0.5 * (P0 - c) * Q0;
     }
@@ -338,20 +324,17 @@ function calculateAndDraw() {
     document.getElementById('sliderDisplay').textContent = 'Pf = ' + preg.toFixed(1);
     document.getElementById('sliderDisplay').style.color = 'var(--reg-color)';
 
-    if (preg > P0) { // 실효성 있는 가격하한제
+    if (preg > P0) { 
       isBinding = true;
-      // Short-side Rule: 수요량이 거래량을 제한함 P = a - bQ => Q = (a-P)/b
       Qt = (a - preg) / b;
       if (Qt < 0) Qt = 0;
-
-      Pd = preg;      // 소비자가 지불하는 가격
-      Ps = c + d * Qt; // 이 거래량에서 생산자의 최소 요구 가격
-
+      Pd = preg;      
+      Ps = c + d * Qt; 
       CS = 0.5 * (a - preg) * Qt;
       PS = 0.5 * (Ps - c) * Qt + (preg - Ps) * Qt;
       GR = 0;
       DWL = 0.5 * (preg - Ps) * (Q0 - Qt);
-    } else { // 실효성 없는 하한제
+    } else { 
       CS = 0.5 * (a - P0) * Q0;
       PS = 0.5 * (P0 - c) * Q0;
     }
@@ -359,14 +342,12 @@ function calculateAndDraw() {
 
   const TS = CS + PS + GR;
 
-  // 대시보드 주입
   document.getElementById('valCS').textContent = CS.toFixed(1);
   document.getElementById('valPS').textContent = PS.toFixed(1);
   document.getElementById('valGR').textContent = GR.toFixed(1);
   document.getElementById('valDWL').textContent = DWL.toFixed(1);
   document.getElementById('valTS').textContent = TS.toFixed(1);
 
-  // 조세 전가 지표 연산 처리
   if (currentPolicy === 'tax' && tax > 0 && Qt > 0) {
     const consumerShare = ((Pd - P0) / tax) * 100;
     const producerShare = ((P0 - Ps) / tax) * 100;
@@ -377,19 +358,16 @@ function calculateAndDraw() {
     document.getElementById('burdenProducer').textContent = '-';
   }
 
-  // 동적 해상도 스케일링 설정
   maxQ = Math.max(Q0 * 1.4, 40);
   maxP = Math.max(a * 1.15, 50);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 3. 기하학적 잉여 영역 렌더링
   if (Qt > 0) {
-    // 소비자 잉여 (Blue)
+    // CS
     ctx.fillStyle = 'rgba(0, 113, 227, 0.12)';
     ctx.beginPath();
     if (currentPolicy === 'ceiling' && isBinding) {
-      // 가격상한제 하에서 소비자 잉여는 아래 사각형 영역까지 포함 확장됨
       ctx.moveTo(toCanvas(a, 0).x, toCanvas(a, 0).y);
       ctx.lineTo(toCanvas(Pd, 0).x, toCanvas(Pd, 0).y);
       ctx.lineTo(toCanvas(Pd, Qt).x, toCanvas(Pd, Qt).y);
@@ -402,11 +380,10 @@ function calculateAndDraw() {
     }
     ctx.closePath(); ctx.fill();
 
-    // 생산자 잉여 (Green)
+    // PS
     ctx.fillStyle = 'rgba(52, 199, 89, 0.12)';
     ctx.beginPath();
     if (currentPolicy === 'floor' && isBinding) {
-      // 가격하한제 하에서 생산자 잉여는 사각형 영역까지 포함 확장됨
       ctx.moveTo(toCanvas(c, 0).x, toCanvas(c, 0).y);
       ctx.lineTo(toCanvas(preg, 0).x, toCanvas(preg, 0).y);
       ctx.lineTo(toCanvas(preg, Qt).x, toCanvas(preg, Qt).y);
@@ -419,7 +396,7 @@ function calculateAndDraw() {
     }
     ctx.closePath(); ctx.fill();
 
-    // 조세 수입 영역 (Orange 사각형)
+    // GR Box
     if (currentPolicy === 'tax' && tax > 0) {
       ctx.fillStyle = 'rgba(255, 149, 0, 0.12)';
       const xLeft = toCanvas(Pd, 0).x;
@@ -429,7 +406,7 @@ function calculateAndDraw() {
       ctx.fillRect(xLeft, yTop, xRight - xLeft, yBottom - yTop);
     }
 
-    // 경제적 자중 손실 (Red 삼각형)
+    // DWL
     if ((currentPolicy === 'tax' && tax > 0) || isBinding) {
       ctx.fillStyle = 'rgba(255, 59, 48, 0.18)';
       ctx.beginPath();
@@ -450,7 +427,7 @@ function calculateAndDraw() {
     }
   }
 
-  // 보조 그리드선
+  // Grid
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
   ctx.lineWidth = 1;
   for(let p=20; p<maxP; p+=20) {
@@ -460,28 +437,27 @@ function calculateAndDraw() {
     ctx.beginPath(); ctx.moveTo(toCanvas(0, q).x, pad.t); ctx.lineTo(toCanvas(0, q).x, H-pad.b); ctx.stroke();
   }
 
-  // 메인 축 구조
+  // Axes
   ctx.strokeStyle = 'rgba(0,0,0,0.15)';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(pad.l, H-pad.b); ctx.lineTo(W-pad.r, H-pad.b); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H-pad.b); ctx.stroke();
 
-  // 함수 곡선 그리기
-  // 수요곡선 (D)
+  // Demand (D)
   ctx.lineWidth = 3.5; ctx.strokeStyle = '#0071e3';
   ctx.beginPath();
   ctx.moveTo(toCanvas(a, 0).x, toCanvas(a, 0).y);
   ctx.lineTo(toCanvas(Math.max(0, a - b * maxQ), maxQ).x, toCanvas(Math.max(0, a - b * maxQ), maxQ).y);
   ctx.stroke();
 
-  // 공급곡선 (S)
+  // Supply (S)
   ctx.strokeStyle = '#34c759';
   ctx.beginPath();
   ctx.moveTo(toCanvas(c, 0).x, toCanvas(c, 0).y);
   ctx.lineTo(toCanvas(c + d * maxQ, maxQ).x, toCanvas(c + d * maxQ, maxQ).y);
   ctx.stroke();
 
-  // 조세 정책 시 S+Tax 이동선 유도
+  // S + Tax
   if(currentPolicy === 'tax' && tax > 0) {
     ctx.strokeStyle = '#5856d6';
     ctx.lineWidth = 2;
@@ -493,7 +469,7 @@ function calculateAndDraw() {
     ctx.setLineDash([]);
   }
 
-  // 가격 규제 정책선 유도 (상한선 / 하한선)
+  // Price Regulation Line
   if((currentPolicy === 'ceiling' || currentPolicy === 'floor')) {
     ctx.strokeStyle = 'var(--reg-color)';
     ctx.lineWidth = 2.5;
@@ -505,7 +481,7 @@ function calculateAndDraw() {
     ctx.setLineDash([]);
   }
 
-  // 거래 지표 가이드 점선 및 가격 매핑
+  // Guideline Dashes
   if (Qt > 0) {
     ctx.strokeStyle = '#ff3b30';
     ctx.lineWidth = 1.2;
@@ -541,18 +517,18 @@ function calculateAndDraw() {
     ctx.textBaseline = 'alphabetic';
   }
 
-  // 축 레이블 마킹
+  // Axis Labels
   ctx.fillStyle = 'var(--muted)';
   ctx.font = '600 11px Pretendard';
   ctx.textAlign = 'center';
-  ctx.fillText('Q (수량)', W/2, H - 10);
+  ctx.fillText('Q (Quantity)', W/2, H - 10);
   
   ctx.save();
   ctx.translate(16, H/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText('P (가격)', 0, 0);
+  ctx.fillText('P (Price)', 0, 0);
   ctx.restore();
 
-  // 곡선 주석 가이드
+  // Curve Labels
   ctx.font = '700 11px Pretendard';
   ctx.fillStyle = '#0071e3'; ctx.fillText('D', toCanvas(a, 0).x + 12, toCanvas(a, 0).y + 12);
   ctx.fillStyle = '#34c759'; ctx.fillText('S', toCanvas(c + d*maxQ, maxQ).x - 12, toCanvas(c + d*maxQ, maxQ).y - 6);
@@ -563,32 +539,30 @@ function calculateAndDraw() {
     ctx.fillStyle = 'var(--reg-color)'; ctx.fillText(currentPolicy === 'ceiling' ? 'Ceiling' : 'Floor', W - pad.r - 35, toCanvas(preg, 0).y - 6);
   }
 
-  // 동적 전공 리포트 브리핑 문구 생성 파트
+  // Brief Reports
   const expEl = document.getElementById('explanation');
   if (currentPolicy === 'tax') {
     if (tax === 0) {
-      expEl.innerHTML = `현재 시장은 외부 왜곡이 전혀 개입되지 않은 자유 경쟁 균형 상태입니다. 가격 <strong>${P0.toFixed(1)}</strong>에서 총 <strong>${Q0.toFixed(1)}</strong>만큼 최적 거래되고 있으며, 자중손실(DWL) 없이 사회적 총후생이 극대화되었습니다.`;
+      expEl.innerHTML = `**Free Market Equilibrium**: Market clears at P = <strong>${P0.toFixed(1)}</strong> and Q = <strong>${Q0.toFixed(1)}</strong>. Total welfare is maximized with zero deadweight loss.`;
     } else if (Qt === 0) {
-      expEl.innerHTML = `정부가 설정한 조세 장벽(T = ${tax.toFixed(1)})이 수요자가 지불할 수 있는 최대 금액 구조를 초과하여 시장이 전면 폐쇄(Market Shutdown)되었습니다. 사회적 순손실만 가득한 상태입니다.`;
+      expEl.innerHTML = `**Market Shutdown**: The tax barrier (T = ${tax.toFixed(1)}) exceeds maximum consumer willingness to pay, suppressing all market transactions.`;
     } else {
-      const moreBurden = Math.abs(b - d) < 0.01 ? '동등하게 분담' : (b > d ? '소비자가 더 크게 분담 (수요가 상대적으로 비탄력적)' : '생산자가 더 크게 분담 (공급이 상대적으로 비탄력적)');
-      expEl.innerHTML = `단위당 <strong>${tax.toFixed(1)}</strong>의 물품세 부과로 인해 시장 가격은 소비자가격 <strong>${Pd.toFixed(1)}</strong>와 생산자수취가격 <strong>${Ps.toFixed(1)}</strong>로 나뉘게 되었습니다. 경제학적 조세 귀착 법칙에 따라 양측은 부담을 <strong>${moreBurden}</strong>하고 있으며, 과세로 인한 거래량 감소로 인해 <strong>${DWL.toFixed(1)}</strong>만큼의 자중 손실(DWL)이 유발됩니다.`;
+      const incidenceDesc = Math.abs(b - d) < 0.01 ? 'equally shared' : (b > d ? 'borne more by consumers (inelastic demand)' : 'borne more by producers (inelastic supply)');
+      expEl.innerHTML = `**Tax Imposed**: Per-unit tax of <strong>${tax.toFixed(1)}</strong> creates a wedge between consumer price (Pd = <strong>${Pd.toFixed(1)}</strong>) and producer price (Ps = <strong>${Ps.toFixed(1)}</strong>). The economic incidence is <strong>${incidenceDesc}</strong>, generating a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
     }
   } 
   else if (currentPolicy === 'ceiling') {
     if (!isBinding) {
-      expEl.innerHTML = `설정된 가격상한선(P_c = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 높기 때문에 시장에 아무런 영향을 주지 못하는 실효성 없는 정책(Non-binding) 상태입니다. 시장은 정상 균형을 유지합니다.`;
+      expEl.innerHTML = `**Non-Binding Price Ceiling**: Since Pc (${preg.toFixed(1)}) sits above the equilibrium price (${P0.toFixed(1)}), it has no economic impact. The market clears normally.`;
     } else {
-      const shortage = ((preg - a)/(-b)) - Qt; // 초과수요 계산 (Q_demand - Q_supply)
-      expEl.innerHTML = `시장 균형가보다 낮은 가격상한제(P_c = <strong>${preg.toFixed(1)}</strong>)가 규제력을 발휘하여 실효성 있는 가격통제(Binding) 상태가 되었습니다. 단측 집행 원칙(Short-side Rule)에 따라 낮아진 가격에서 생산자가 공급을 줄여 실제 거래량은 <strong>${Qt.toFixed(1)}</strong>로 급감했습니다. 이로 인해 공급 부족인 초과수요 현상이 발생하며, 시장 거래 감소로 인해 <strong>${DWL.toFixed(1)}</strong>의 사회적 자중 손실(DWL)이 유발됩니다.`;
+      expEl.innerHTML = `**Binding Price Ceiling**: Pc (<strong>${preg.toFixed(1)}</strong>) restricts the market price. Following the **Short-side Rule**, producers reduce output, shrinking market volume to Qr = <strong>${Qt.toFixed(1)}</strong>. This distortion creates a shortage and triggers a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
     }
   } 
   else if (currentPolicy === 'floor') {
     if (!isBinding) {
-      expEl.innerHTML = `설정된 가격하한선(P_f = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 낮기 때문에 시장에 아무런 왜곡을 주지 못하는 실효성 없는 정책(Non-binding) 상태입니다. 시장은 정상 균형을 유지합니다.`;
+      expEl.innerHTML = `**Non-Binding Price Floor**: Since Pf (${preg.toFixed(1)}) sits below the equilibrium price (${P0.toFixed(1)}), it has no economic impact. The market clears normally.`;
     } else {
-      const surplusGoods = ((preg - c)/d) - Qt; // 초과공급 계산 (Q_supply - Q_demand)
-      expEl.innerHTML = `시장 균형가보다 높은 가격하한제(P_f = <strong>${preg.toFixed(1)}</strong>)로 인해 실효성 있는 최저가격 규제(Binding) 상태가 되었습니다. 높은 규제 가격 때문에 소비자의 구매 수요가 축소되어 실제 시장 거래량은 <strong>${Qt.toFixed(1)}</strong>로 줄어들었습니다. 판매되지 못한 물량으로 인해 시장에 초과공급(재고/실업) 현상이 나타나며, 강제적인 거래 위축으로 인해 사회적으로 <strong>${DWL.toFixed(1)}</strong>만큼의 자중 손실(DWL)을 입게 됩니다.`;
+      expEl.innerHTML = `**Binding Price Floor**: Pf (<strong>${preg.toFixed(1)}</strong>) forces price above equilibrium. Following the **Short-side Rule**, consumer demand contracts, cutting transactions to Qr = <strong>${Qt.toFixed(1)}</strong>. This policy induces a market surplus (excess supply) and a DWL of <strong>${DWL.toFixed(1)}</strong>.`;
     }
   }
 }
@@ -604,7 +578,6 @@ function resize() {
   calculateAndDraw();
 }
 
-// 이벤트 바인딩 등록
 ['inputA', 'inputB', 'inputC', 'inputD'].forEach(id => {
   document.getElementById(id).addEventListener('input', calculateAndDraw);
 });
@@ -614,7 +587,6 @@ document.querySelectorAll('input[name="policy"]').forEach(radio => {
 });
 window.addEventListener('resize', resize);
 
-// 시뮬레이터 최초 로드 실행
 handlePolicyChange();
 resize();
 </script>
