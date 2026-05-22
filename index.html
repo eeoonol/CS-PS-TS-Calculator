@@ -567,28 +567,28 @@ function calculateAndDraw() {
   const expEl = document.getElementById('explanation');
   if (currentPolicy === 'tax') {
     if (tax === 0) {
-      expEl.innerHTML = `현재 시장은 외부 왜곡이 전혀 개입되지 않은 **자유 경쟁 균형 상태**입니다. 가격 <strong>${P0.toFixed(1)}</strong>에서 총 <strong>${Q0.toFixed(1)}</strong>만큼 최적 거래되고 있으며, 자중손실(DWL) 없이 사회적 총후생이 극대화되었습니다.`;
+      expEl.innerHTML = `현재 시장은 외부 왜곡이 전혀 개입되지 않은 자유 경쟁 균형 상태입니다. 가격 <strong>${P0.toFixed(1)}</strong>에서 총 <strong>${Q0.toFixed(1)}</strong>만큼 최적 거래되고 있으며, 자중손실(DWL) 없이 사회적 총후생이 극대화되었습니다.`;
     } else if (Qt === 0) {
-      expEl.innerHTML = `정부가 설정한 조세 장벽(T = ${tax.toFixed(1)})이 수요자가 지불할 수 있는 최대 금액 구조를 초과하여 **시장이 전면 폐쇄(Market Shutdown)**되었습니다. 사회적 순손실만 가득한 상태입니다.`;
+      expEl.innerHTML = `정부가 설정한 조세 장벽(T = ${tax.toFixed(1)})이 수요자가 지불할 수 있는 최대 금액 구조를 초과하여 시장이 전면 폐쇄(Market Shutdown)되었습니다. 사회적 순손실만 가득한 상태입니다.`;
     } else {
       const moreBurden = Math.abs(b - d) < 0.01 ? '동등하게 분담' : (b > d ? '소비자가 더 크게 분담 (수요가 상대적으로 비탄력적)' : '생산자가 더 크게 분담 (공급이 상대적으로 비탄력적)');
-      expEl.innerHTML = `단위당 <strong>${tax.toFixed(1)}</strong>의 물품세 부과로 인해 시장 가격은 소비자가격 <strong>${Pd.toFixed(1)}</strong>와 생산자수취가격 <strong>${Ps.toFixed(1)}</strong>로 나뉘게 되었습니다. 경제학적 조세 귀착 법칙에 따라 양측은 부담을 <strong>${moreBurden}</strong>하고 있으며, 과세로 인한 거래량 감소로 인해 <strong>${DWL.toFixed(1)}</strong>만큼의 **자중 손실(DWL)**이 유발됩니다.`;
+      expEl.innerHTML = `단위당 <strong>${tax.toFixed(1)}</strong>의 물품세 부과로 인해 시장 가격은 소비자가격 <strong>${Pd.toFixed(1)}</strong>와 생산자수취가격 <strong>${Ps.toFixed(1)}</strong>로 나뉘게 되었습니다. 경제학적 조세 귀착 법칙에 따라 양측은 부담을 <strong>${moreBurden}</strong>하고 있으며, 과세로 인한 거래량 감소로 인해 <strong>${DWL.toFixed(1)}</strong>만큼의 자중 손실(DWL)이 유발됩니다.`;
     }
   } 
   else if (currentPolicy === 'ceiling') {
     if (!isBinding) {
-      expEl.innerHTML = `설정된 가격상한선(P_c = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 높기 때문에 시장에 아무런 영향을 주지 못하는 **실효성 없는 정책(Non-binding)** 상태입니다. 시장은 정상 균형을 유지합니다.`;
+      expEl.innerHTML = `설정된 가격상한선(P_c = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 높기 때문에 시장에 아무런 영향을 주지 못하는 실효성 없는 정책(Non-binding) 상태입니다. 시장은 정상 균형을 유지합니다.`;
     } else {
       const shortage = ((preg - a)/(-b)) - Qt; // 초과수요 계산 (Q_demand - Q_supply)
-      expEl.innerHTML = `시장 균형가보다 낮은 가격상한제(P_c = <strong>${preg.toFixed(1)}</strong>)가 규제력을 발휘하여 **실효성 있는 가격통제(Binding)** 상태가 되었습니다. 단측 집행 원칙(Short-side Rule)에 따라 낮아진 가격에서 생산자가 공급을 줄여 실제 거래량은 <strong>${Qt.toFixed(1)}</strong>로 급감했습니다. 이로 인해 공급 부족인 **초과수요** 현상이 발생하며, 시장 거래 감소로 인해 <strong>${DWL.toFixed(1)}</strong>의 **사회적 자중 손실(DWL)**이 유발됩니다.`;
+      expEl.innerHTML = `시장 균형가보다 낮은 가격상한제(P_c = <strong>${preg.toFixed(1)}</strong>)가 규제력을 발휘하여 실효성 있는 가격통제(Binding) 상태가 되었습니다. 단측 집행 원칙(Short-side Rule)에 따라 낮아진 가격에서 생산자가 공급을 줄여 실제 거래량은 <strong>${Qt.toFixed(1)}</strong>로 급감했습니다. 이로 인해 공급 부족인 초과수요 현상이 발생하며, 시장 거래 감소로 인해 <strong>${DWL.toFixed(1)}</strong>의 사회적 자중 손실(DWL)이 유발됩니다.`;
     }
   } 
   else if (currentPolicy === 'floor') {
     if (!isBinding) {
-      expEl.innerHTML = `설정된 가격하한선(P_f = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 낮기 때문에 시장에 아무런 왜곡을 주지 못하는 **실효성 없는 정책(Non-binding)** 상태입니다. 시장은 정상 균형을 유지합니다.`;
+      expEl.innerHTML = `설정된 가격하한선(P_f = ${preg.toFixed(1)})이 시장 균형 가격(${P0.toFixed(1)})보다 낮기 때문에 시장에 아무런 왜곡을 주지 못하는 실효성 없는 정책(Non-binding) 상태입니다. 시장은 정상 균형을 유지합니다.`;
     } else {
       const surplusGoods = ((preg - c)/d) - Qt; // 초과공급 계산 (Q_supply - Q_demand)
-      expEl.innerHTML = `시장 균형가보다 높은 가격하한제(P_f = <strong>${preg.toFixed(1)}</strong>)로 인해 **실효성 있는 최저가격 규제(Binding)** 상태가 되었습니다. 높은 규제 가격 때문에 소비자의 구매 수요가 축소되어 실제 시장 거래량은 <strong>${Qt.toFixed(1)}</strong>로 줄어들었습니다. 판매되지 못한 물량으로 인해 시장에 **초과공급(재고/실업)** 현상이 나타나며, 강제적인 거래 위축으로 인해 사회적으로 <strong>${DWL.toFixed(1)}</strong>만큼의 **자중 손실(DWL)**을 입게 됩니다.`;
+      expEl.innerHTML = `시장 균형가보다 높은 가격하한제(P_f = <strong>${preg.toFixed(1)}</strong>)로 인해 실효성 있는 최저가격 규제(Binding) 상태가 되었습니다. 높은 규제 가격 때문에 소비자의 구매 수요가 축소되어 실제 시장 거래량은 <strong>${Qt.toFixed(1)}</strong>로 줄어들었습니다. 판매되지 못한 물량으로 인해 시장에 초과공급(재고/실업) 현상이 나타나며, 강제적인 거래 위축으로 인해 사회적으로 <strong>${DWL.toFixed(1)}</strong>만큼의 자중 손실(DWL)을 입게 됩니다.`;
     }
   }
 }
